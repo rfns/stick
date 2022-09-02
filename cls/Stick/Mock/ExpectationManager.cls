@@ -18,7 +18,6 @@ Method %OnNew(mock As Stick.Mock, methodName As %String) As %Status
 Method ToBeCalledNTimes(n As %Integer) As Stick.Mock.ToBeCalledTimesExpectation
 {
 	return ..AddExpectation(##class(Stick.Mock.ToBeCalledTimesExpectation).Create($this, n))
-	return $this
 }
 
 Method ToBeCalledOnce() As Stick.Mock.ToBeCalledTimesExpectation
@@ -61,11 +60,6 @@ Method Verify(callIndex As %Integer)
 {
 	
 	for i=1:1:..Expectations.Count() do ..Expectations.GetAt(i).DoAssert(callIndex)
-}
-
-Method GetTestCase() As %UnitTest.TestCase
-{
-	return ..Mock.GetTestCase()
 }
 
 Method GetSpy() As Stick.MethodSpy

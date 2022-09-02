@@ -1,0 +1,15 @@
+#def1arg MockAssertEquals(%args)      testCase.AssertEqualsViaMacro(##quote(%args),%args)
+#def1arg MockAssertNotEquals(%args)   testCase.AssertNotEqualsViaMacro(##quote(%args),%args)
+#def1arg MockAssertTrue(%args)        testCase.AssertTrueViaMacro(##quote(%args),%args)
+#def1arg MockAssertNotTrue(%args)     testCase.AssertNotTrueViaMacro(##quote(%args),%args)
+#def1arg MockAssertStatusOK(%args)    testCase.AssertStatusOKViaMacro(##quote(%args),%args)
+#def1arg MockAssertStatusNotOK(%args) testCase.AssertStatusNotOKViaMacro(##quote(%args),%args)
+#def1arg MockAssertStatusEquals(%args) testCase.AssertStatusEqualsViaMacro(##quote(%args),%args)
+#def1arg MockAssertFilesSame(%args)   testCase.AssertFilesSameViaMacro(##quote(%args),%args)
+#def1arg MockAssertFilesSQLUnorderedSame(%args)   testCase.AssertFilesSQLUnorderedSameViaMacro(##quote(%args),%args)
+#;
+#define MockLogMessage(%message)    testCase.LogMessage(%message)
+#define MockAssertSuccess(%message)    testCase.AssertSuccessViaMacro(%message)
+#define MockAssertFailure(%message)    testCase.AssertFailureViaMacro(%message)
+#define MockAssertSkipped(%message)    testCase.AssertSkippedViaMacro(%message)
+#;
