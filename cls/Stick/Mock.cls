@@ -88,7 +88,7 @@ Method AddToExpectationManagerGroups(groups As %ArrayOfObjects, expectationManag
 	set group = ##class(%ListOfObjects).%New()
 	
 	if groups.IsDefined(expectationManager.GroupKey) {		
-		set group = ..ExpectationManagers.GetAt(expectationManager.GroupKey)		
+		set group = groups.GetAt(expectationManager.GroupKey)		
 	}
 	
 	do group.Insert(expectationManager)
@@ -105,10 +105,7 @@ Method VerifyExpectationManagerGroups(expectationManagerGroups As %ArrayOfObject
 			quit:(key = "" || (managerGroup=""))
 		
 			for i=1:1:managerGroup.Count()  do managerGroup.GetAt(i).Verify(i)
-		
-			do managerGroup.Clear()
 		}
-		do expectationManagerGroups.Clear()
 	} catch ex {
 		return ex.AsStatus()
 	}
@@ -121,13 +118,15 @@ Method Verify() As %Status
 	$$$QuitOnError(..VerifyExpectationManagerGroups(..MethodExpectationManagers))
 	$$$QuitOnError(..VerifyExpectationManagerGroups(..PropertyExpectationManagers))
 	
+	do ..ResetMock()
+	
 	return $$$OK
 }
 
 Method ResetMock()
 {
 	do ..GetStub().ResetStub()
-	do ..ExpectationManagers.Clear()
+	do ..MethodExpectationManagers.Clear()
 	do ..PropertyExpectationManagers.Clear()
 }
 
