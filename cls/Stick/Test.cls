@@ -3,9 +3,10 @@ Class Stick.Test Extends %UnitTest.TestCase
 
 ClassMethod Test2()
 {
-	set mock = ##class(Stick.Mock).Create()
+	set mock = ##class(Stick.Mock).Create(##class(Qualix.RCUsuario).%New())
 	do mock.Expects("%Save").ToBeCalledOnce().ToUseArguments(1,2,3).ToReturn(1)
 	do mock.Expects("%Saved").ToBeCalledOnce()
+	do mock.Expects("DefinirSenha").ToBeCalledOnce()	
 	
 	do mock.%Save(1,2,3)
 	do mock.%Saved()

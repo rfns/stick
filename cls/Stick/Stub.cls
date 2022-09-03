@@ -5,6 +5,12 @@ Property "__MethodStubs__" As Stick.Stub.Method [ MultiDimensional ];
 
 Property "__Properties__" [ MultiDimensional ];
 
+Method %OnNew(object As %RegisteredObject = "") As %Status
+{
+	if $isobject(object) do ..CopyFromReflectedActual(object)
+	return $$$OK
+}
+
 Method Method(methodName As %String) As Stick.Stub.Method
 {
 	set methodStub = ##class(Stick.Stub.Method).%New()
@@ -12,9 +18,37 @@ Method Method(methodName As %String) As Stick.Stub.Method
 	return methodStub
 }
 
-Method %OnNew() As %Status
+Method CopyFromReflectedActual(object As %RegisteredObject)
 {
-	return $$$OK
+	if object = "" return
+	if '$isobject(object) $$$ThrowStatus($$$ERROR($$$GeneralError, "Object to be mocked is not really an object."))
+	set classname = $classname(object)
+	
+	set classDefinition = ##class(%Dictionary.ClassDefinition).%OpenId(classname)
+	
+	if '$isobject(classDefinition) {
+		$$$ThrowStatus($$$ERROR($$$GeneralError, "Class definition for the provided object is not available or is invalid."))
+	}
+	
+	for i=1:1:classDefinition.Properties.Count() {
+		set property = classDefinition.Properties.GetAt(i)
+		set propertyName = property.Name
+		
+		if 'property.Private {
+			set $property($this, propertyName) = $property(object, propertyName)
+		} else {
+			set $property($this, propertyName) = property.InitialExpression
+		}
+	}
+	
+	for i=1:1:classDefinition.Methods.Count() {
+		set method = classDefinition.Methods.GetAt(i)
+		set methodName = method.Name
+		
+		if 'method.Private {
+			do ..Method(methodName)
+		}
+	}
 }
 
 /// Is used to implement an unknown method call.  It is also used

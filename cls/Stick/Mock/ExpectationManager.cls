@@ -62,7 +62,7 @@ Method Verify(callIndex As %Integer)
 	for i=1:1:..Expectations.Count() do ..Expectations.GetAt(i).DoAssert(callIndex)
 }
 
-Method GetSpy() As Stick.MethodSpy
+Method GetSpy() As Stick.Spy
 {
 	return ..Mock.GetStub().GetMethodSpy(..MethodName)
 }

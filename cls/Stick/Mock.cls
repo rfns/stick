@@ -5,15 +5,15 @@ Property Stub As Stick.Stub [ Private ];
 
 Property ExpectationManagers As array Of Stick.Mock.ExpectationManager [ Private ];
 
-Method %OnNew() As %Status
+Method %OnNew(object As %RegisteredObject = "") As %Status
 {
-	set ..Stub = ##class(Stick.Stub).%New()
+	set ..Stub = ##class(Stick.Stub).%New(object)
 	return $$$OK
 }
 
-ClassMethod Create() As Stick.Mock
+ClassMethod Create(object As %RegisteredObject = "") As Stick.Mock
 {
-	return ..%New()
+	return ..%New(object)
 }
 
 Method EnsureMethodStub(methodName As %String) [ Private ]
