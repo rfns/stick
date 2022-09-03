@@ -140,6 +140,7 @@ Method ClearStub()
 	set ..ImplementationObject = ""
 	kill i%"__MethodStubs__"
 	kill i%"__Properties__"
+	kill i%"__PropertySpies__"
 }
 
 Method ResetStub()
