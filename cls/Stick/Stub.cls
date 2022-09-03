@@ -1,13 +1,13 @@
 Class Stick.Stub Extends %RegisteredObject
 {
 
-Property "__MethodStubs__" As Stick.MethodStub [ MultiDimensional ];
+Property "__MethodStubs__" As Stick.Stub.Method [ MultiDimensional ];
 
 Property "__Properties__" [ MultiDimensional ];
 
-Method Method(methodName As %String) As Stick.MethodStub
+Method Method(methodName As %String) As Stick.Stub.Method
 {
-	set methodStub = ##class(Stick.MethodStub).%New()
+	set methodStub = ##class(Stick.Stub.Method).%New()
 	set i%"__MethodStubs__"(methodName) = methodStub
 	return methodStub
 }
@@ -40,7 +40,7 @@ Method %DispatchGetProperty(propertyName As %String) [ ServerOnly = 1 ]
 	return $get(i%"__Properties__"(propertyName))
 }
 
-Method GetMethodStub(methodName As %String) As Stick.MethodStub
+Method GetMethodStub(methodName As %String) As Stick.Stub.Method
 {
 	if '$isobject($get(i%"__MethodStubs__"(methodName))) $$$ThrowStatus($$$ERROR($$$GeneralError, "Invalid method dispatch: "_methodName))
 	set methodStub = i%"__MethodStubs__"(methodName)

@@ -1,7 +1,7 @@
 Class Stick.Mock.ToUseArgumentsExpectation Extends (%RegisteredObject, Stick.Mock.AbstractExpectation)
 {
 
-Method OnEvaluate(callIndex As %Integer, spy As Stick.MethodSpy, methodName As %String) As %Status
+Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String) As %Status
 {
 	merge args = spy.Calls(callIndex).Arguments
 	merge expectedArgs = ..Value

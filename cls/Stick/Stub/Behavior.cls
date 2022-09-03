@@ -1,7 +1,7 @@
-Class Stick.MethodCall Extends %RegisteredObject
+Class Stick.Stub.Behavior Extends %RegisteredObject
 {
 
-Property Behavior As Stick.StubBehavior;
+Property Storage As Stick.Stub.BehaviorStorage;
 
 Property ReturnValue As %String;
 
@@ -9,15 +9,15 @@ Property Exception As %Exception.AbstractException;
 
 Property HasReturnValue As %Boolean [ InitialExpression = 0 ];
 
-Method %OnNew(behavior As Stick.StubBehavior) As %Status
+Method %OnNew(storage As Stick.Stub.BehaviorStorage) As %Status
 {
-	set ..Behavior = behavior
+	set ..Storage = storage
 	return $$$OK
 }
 
-Method AddCall() As Stick.MethodCall
+Method AddCall() As Stick.Stub.Behavior
 {
-	return ..Behavior.AddCall()
+	return ..Storage.AddCall()
 }
 
 Method ThenReturn(value)

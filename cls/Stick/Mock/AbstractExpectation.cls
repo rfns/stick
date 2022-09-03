@@ -44,11 +44,11 @@ Method DoAssert(callIndex As %Integer)
 	return $$$OK
 }
 
-Method OnEvaluate(callIndex As %Integer, spy As Stick.MethodSpy, methodName As %String)
+Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String)
 {
 }
 
-Method AddBehavior(methodStub As Stick.MethodStub)
+Method AddBehavior(methodStub As Stick.Stub.Method)
 {
 }
 

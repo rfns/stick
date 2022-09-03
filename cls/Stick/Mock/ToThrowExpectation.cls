@@ -1,12 +1,12 @@
 Class Stick.Mock.ToThrowExpectation Extends (%RegisteredObject, Stick.Mock.AbstractExpectation)
 {
 
-Method AddBehavior(methodStub As Stick.MethodStub)
+Method AddBehavior(methodStub As Stick.Stub.Method)
 {
 	do methodStub.ThenThrow(..Value)
 }
 
-Method OnEvaluate(callIndex As %Integer, spy As Stick.MethodSpy, methodName As %String)
+Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String)
 {
 	
 	set expectedStatus = ..Value.AsStatus()

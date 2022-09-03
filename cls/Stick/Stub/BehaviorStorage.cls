@@ -1,4 +1,4 @@
-Class Stick.StubBehavior Extends %RegisteredObject
+Class Stick.Stub.BehaviorStorage Extends %RegisteredObject
 {
 
 Property ExpectedCalls As list Of Stick.MethodCall [ Private ];
@@ -7,11 +7,11 @@ Property Spy As Stick.MethodSpy [ Private ];
 
 Property CallIndex As %Integer [ InitialExpression = 1 ];
 
-Property Arguments [ InitialExpression = 0, MultiDimensional ];
+Property KeyArguments [ InitialExpression = 0, MultiDimensional ];
 
 Method %OnNew(ByRef args = "") As %Status
 {
-	merge i%Arguments = args
+	merge i%KeyArguments = args
 	set ..ExpectedCalls = ##class(%ListOfObjects).%New()
 	set ..Spy = ##class(Stick.MethodSpy).%New()	
 	
