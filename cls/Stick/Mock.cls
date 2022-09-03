@@ -115,12 +115,17 @@ Method VerifyExpectationManagerGroups(expectationManagerGroups As %ArrayOfObject
 
 Method Verify() As %Status
 {
-	$$$QuitOnError(..VerifyExpectationManagerGroups(..MethodExpectationManagers))
-	$$$QuitOnError(..VerifyExpectationManagerGroups(..PropertyExpectationManagers))
+	set sc = $$$OK
+	
+	try {
+		$$$ThrowStatus(..VerifyExpectationManagerGroups(..MethodExpectationManagers))
+		$$$ThrowStatus(..VerifyExpectationManagerGroups(..PropertyExpectationManagers))		
+	} catch ex {
+		set sc = ex.AsStatus()
+	}		
 	
 	do ..ResetMock()
-	
-	return $$$OK
+	return sc
 }
 
 Method ResetMock()
