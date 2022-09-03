@@ -1,23 +1,19 @@
 Class Stick.Stub.Behavior Extends %RegisteredObject
 {
 
-Property Storage As Stick.Stub.BehaviorStorage;
-
 Property ReturnValue As %String;
 
 Property Exception As %Exception.AbstractException;
 
 Property HasReturnValue As %Boolean [ InitialExpression = 0 ];
 
-Method %OnNew(storage As Stick.Stub.BehaviorStorage) As %Status
-{
-	set ..Storage = storage
-	return $$$OK
-}
+Property HasException As %Boolean [ InitialExpression = 0 ];
 
-Method AddCall() As Stick.Stub.Behavior
+Property Passthrough As %Boolean [ InitialExpression = 0 ];
+
+Method %OnNew() As %Status
 {
-	return ..Storage.AddCall()
+	return $$$OK
 }
 
 Method ThenReturn(value)
@@ -37,6 +33,15 @@ Method ThenThrow(exception As %Exception.AbstractException)
 	}
 	
 	set ..Exception = exception
+}
+
+Method ThenPassthrough()
+{
+	if '..HasReturnValue && '..HasException {
+		set ..Passthrough = 1
+	} else {
+		$$$ThrowStatus($$$ERROR($$$GeneralError, "cannot passthrough when stub is already supposed to return or throw."))
+	}
 }
 
 }

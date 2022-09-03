@@ -6,11 +6,11 @@ Method AddBehavior(methodStub As Stick.Stub.Method)
 	do methodStub.ThenThrow(..Value)
 }
 
-Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String)
+Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String)
 {
 	
 	set expectedStatus = ..Value.AsStatus()
-	set receivedStatus = $select($isobject(spy.Calls(callIndex).Exception) : spy.LastException.AsStatus(), 1: "")
+	set receivedStatus = $select($isobject(spy.Calls(callIndex).ExceptionThrown) : spy.LastException.AsStatus(), 1: "")
 	set expectedMessage = $System.Status.GetErrorText(expectedStatus)
 	set receivedMessage = $select($$$ISERR(receivedStatus): $System.Status.GetErrorText(receivedStatus), 1: "")
 	
@@ -19,16 +19,6 @@ Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String
 	}
 	
 	return $$$OK
-}
-
-Method ToReturn(value = "")
-{
-	return ..ExpectationManager.ToReturn(value)
-}
-
-Method ToThrow(exception As %Exception.AbstractException)
-{
-	return ..ExpectationManager.ToThrow(exception)
 }
 
 Method ToUseArguments(args...)
@@ -54,6 +44,11 @@ Method ToBeCalledTwice() As Stick.Mock.ToBeCalledTimesExpectation
 Method ToBeCalledThrice() As Stick.Mock.ToBeCalledTimesExpectation
 {
 	return ..ToBeCalledNTimes(3)
+}
+
+Method ToPassthrough() As Stick.Mock.ToPassthroughExpectation
+{
+	return ..ExpectationManager.ToPassthrough()
 }
 
 }

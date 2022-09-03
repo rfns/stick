@@ -1,7 +1,7 @@
 Class Stick.Mock.ToUseArgumentsExpectation Extends (%RegisteredObject, Stick.Mock.AbstractExpectation)
 {
 
-Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String) As %Status
+Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String) As %Status
 {
 	merge args = spy.Calls(callIndex).Arguments
 	merge expectedArgs = ..Value
@@ -25,12 +25,12 @@ SerializeArgs
 	quit
 }
 
-Method ToReturn(value = "")
+Method ToReturn(value = "") As Stick.Mock.ToReturnExpectation
 {
 	return ..ExpectationManager.ToReturn(value)
 }
 
-Method ToThrow(exception As %Exception.AbstractException)
+Method ToThrow(exception As %Exception.AbstractException) As Stick.Mock.ToThrowExpectation
 {
 	return ..ExpectationManager.ToThrow(exception)
 }
@@ -53,6 +53,11 @@ Method ToBeCalledTwice() As Stick.Mock.ToBeCalledTimesExpectation
 Method ToBeCalledThrice() As Stick.Mock.ToBeCalledTimesExpectation
 {
 	return ..ToBeCalledNTimes(3)
+}
+
+Method ToPassthrough() As Stick.Mock.ToPassthroughExpectation
+{
+	return ..ExpectationManager.ToPassthrough()
 }
 
 }

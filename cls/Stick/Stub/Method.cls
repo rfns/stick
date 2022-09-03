@@ -35,7 +35,13 @@ Method ThenThrow(exception As %Exception.AbstractException)
 	return ..DefaultBehaviorAssignment
 }
 
-Method CallWhileSpying(args...)
+Method ThenPassthrough()
+{
+	do ..DefaultBehaviorAssignment.ThenPassthrough()
+	return ..DefaultBehaviorAssignment
+}
+
+Method CallWhileSpying(implementationObject As %RegisteredObject = "", methodName As %String, args...)
 {
 	
 	set assignment = ..GetMatchingBehaviorAssignment(.args)
@@ -43,27 +49,26 @@ Method CallWhileSpying(args...)
 	set returnValue = ""
 	set uncaughtException = 0
 	
-	if assignment.HasReturnValue() {
+	if assignment.IsPassthrough() && $isobject(implementationObject) {
+		try {
+			set returnValue = $method(implementationObject, methodName, args...) 
+		} catch ex {
+			if $System.Status.GetErrorText(ex.AsStatus()) '[ "<COMMAND>" {
+				set exception = ex
+			}
+		}
+	}
+	
+	if 'assignment.IsPassthrough() && assignment.HasReturnValue() {
 		set returnValue = assignment.GetReturnValue()
 	}
 	
-	if assignment.HasException() {
-		set exception = assignment.GetException()
-		// Try to throw the exception. The implementation is expected to catch it.
-		// If catch block is executed, then something went wrong with the implementation so we force break the test.
-		try {
-			throw exception
-		} catch ex {
-			set uncaughtException = 1			
-		}
+	if 'assignment.IsPassthrough() && assignment.HasException() {
+		set exception = assignment.GetException()		
 	}
 		
 	do assignment.GetSpy().Record(.args, exception, returnValue)
-	do assignment.IncrementCallCount()
-	
-	if uncaughtException = 1 {
-		$$$ThrowStatus($$$EMBEDSC($$$ERROR($$$GeneralError, "An expected exception has not been caught"), ex.AsStatus()))
-	}
+	do assignment.IncrementCallCount()	
 	
 	return returnValue
 }
@@ -84,12 +89,18 @@ Method GetMatchingBehaviorAssignment(ByRef args, exclusive As %Boolean = 0) As S
 	return ""
 }
 
-Method GetMethodSpy(args...) As Stick.Spy
+Method GetMethodSpy(args...) As Stick.Spy.Method
 {
 	set assignment = ..GetMatchingBehaviorAssignment(.args)
 	if $isobject(assignment) return assignment.GetSpy()
 	
-	return ##class(Stick.Spy).%New()
+	return ##class(Stick.Spy.Method).%New()
+}
+
+Method Reset()
+{
+	set ..DefaultBehaviorAssignment = ##class(Stick.Stub.BehaviorAssignment).%New()
+	do ..BehaviorAssignments.Clear()
 }
 
 }

@@ -1,4 +1,4 @@
-Class Stick.Spy Extends %RegisteredObject
+Class Stick.Spy.Method Extends (%RegisteredObject, Stick.Spy.ICommon)
 {
 
 Property CallCount As %Integer [ InitialExpression = 0 ];
@@ -22,6 +22,13 @@ Method Record(ByRef args = "", exception As %Exception.AbstractException = "", r
 	set ..LastException = exception
 	set ..LastReturnedValue = returnValue
 	set i%Calls(..CallCount + 1) = ##class(Stick.Spy.CallRecord).%New(.args, exception, returnValue)
+}
+
+Method Reset()
+{
+	set ..LastException = ""
+	set ..LastReturnedValue = ""
+	kill i%Class
 }
 
 }

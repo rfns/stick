@@ -1,0 +1,5 @@
+Class Stick.Spy.ICommon
+{
+
+}
+

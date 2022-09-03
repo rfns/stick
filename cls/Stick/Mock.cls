@@ -3,7 +3,9 @@ Class Stick.Mock Extends %RegisteredObject
 
 Property Stub As Stick.Stub [ Private ];
 
-Property ExpectationManagers As array Of Stick.Mock.ExpectationManager [ Private ];
+Property MethodExpectationManagers As array Of Stick.Mock.MethodExpectationManager [ Private ];
+
+Property PropertyExpectationManagers As array Of Stick.Mock.PropertyExpectationManager [ Private ];
 
 Method %OnNew(object As %RegisteredObject = "") As %Status
 {
@@ -45,10 +47,15 @@ Method %DispatchSetProperty(propertyName As %String, value) [ ServerOnly = 1 ]
 	set $property(..Stub, propertyName) = value
 }
 
-Method Expects(methodName As %String) As Stick.Mock.ExpectationManager
+Method ExpectsMethod(methodName As %String) As Stick.Mock.MethodExpectationManager
 {
 	do ..EnsureMethodStub(methodName)
-	return ##class(Stick.Mock.ExpectationManager).%New($this, methodName)
+	return ##class(Stick.Mock.MethodExpectationManager).%New($this, methodName)
+}
+
+Method ExpectsProperty(propertyName) As Stick.Mock.PropertyExpectationManager
+{
+	return ##class(Stick.Mock.PropertyExpectationManager).%New($this, propertyName)
 }
 
 Method GetStub() As Stick.Stub
@@ -56,37 +63,86 @@ Method GetStub() As Stick.Stub
 	return ..Stub
 }
 
-Method AddExpectationManager(expectationManager As Stick.Mock.ExpectationManager)
+Method AddExpectationManager(expectationManager As Stick.Mock.AbstractExpectationManager)
+{
+	if expectationManager.%IsA("Stick.Mock.MethodExpectationManager") {
+		do ..AddMethodExpectationManager(expectationManager)
+	}
+	if expectationManager.%IsA("Stick.Mock.PropertyExpectationManager") {
+		do ..AddPropertyExpectationManager(expectationManager)
+	}
+}
+
+Method AddMethodExpectationManager(expectationManager As Stick.Mock.MethodExpectationManager)
+{
+	do ..AddToExpectationManagerGroups(..MethodExpectationManagers, expectationManager)
+}
+
+Method AddPropertyExpectationManager(expectationManager As Stick.Mock.PropertyExpectationManager)
+{
+	do ..AddToExpectationManagerGroups(..PropertyExpectationManagers, expectationManager)
+}
+
+Method AddToExpectationManagerGroups(groups As %ArrayOfObjects, expectationManager As Stick.Mock.AbstractExpectationManager) [ Private ]
 {
 	set group = ##class(%ListOfObjects).%New()
 	
-	if ..ExpectationManagers.IsDefined(expectationManager.MethodName) {		
-		set group = ..ExpectationManagers.GetAt(expectationManager.MethodName)		
+	if groups.IsDefined(expectationManager.GroupKey) {		
+		set group = ..ExpectationManagers.GetAt(expectationManager.GroupKey)		
 	}
 	
 	do group.Insert(expectationManager)
-	do ..ExpectationManagers.SetAt(group, expectationManager.MethodName)
+	do groups.SetAt(group, expectationManager.GroupKey)
 }
 
-Method Verify()
+Method VerifyExpectationManagerGroups(expectationManagerGroups As %ArrayOfObjects) As %Status [ Private ]
 {
 	set key = ""
 	
 	try {		
 		while 1 {
-			set managerGroup = ..ExpectationManagers.GetNext(.key)
+			set managerGroup = expectationManagerGroups.GetNext(.key)
 			quit:(key = "" || (managerGroup=""))
 		
 			for i=1:1:managerGroup.Count()  do managerGroup.GetAt(i).Verify(i)
 		
 			do managerGroup.Clear()
 		}
-		do ..ExpectationManagers.Clear()
+		do expectationManagerGroups.Clear()
 	} catch ex {
 		return ex.AsStatus()
 	}
 	
 	return $$$OK
+}
+
+Method Verify() As %Status
+{
+	$$$QuitOnError(..VerifyExpectationManagerGroups(..MethodExpectationManagers))
+	$$$QuitOnError(..VerifyExpectationManagerGroups(..PropertyExpectationManagers))
+	
+	return $$$OK
+}
+
+Method ResetMock()
+{
+	do ..GetStub().ResetStub()
+	do ..ExpectationManagers.Clear()
+	do ..PropertyExpectationManagers.Clear()
+}
+
+Method ResetMethodExpectation(methodName As %String)
+{
+	do ..MethodExpectationManagers.RemoveAt(methodName)	
+	set methodStub = ..GetStub().GetMethodStub(methodName)
+	if $isobject(methodStub)  do methodStub.Reset()
+}
+
+Method ResetPropertyExpectation(methodName As %String)
+{
+	do ..PropertyExpectationManagers.RemoveAt(methodName)	
+	set methodStub = ..GetStub().GetMethodStub(methodName)
+	if $isobject(methodStub)  do methodStub.Reset()
 }
 
 }
