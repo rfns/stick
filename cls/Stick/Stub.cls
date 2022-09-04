@@ -1,7 +1,7 @@
 Class Stick.Stub Extends %RegisteredObject
 {
 
-Property ImplementationObject As %RegisteredObject [ Private ];
+Property "__ImplementationObject__" As %RegisteredObject [ Private ];
 
 Property "__MethodStubs__" As Stick.Stub.Method [ MultiDimensional ];
 
@@ -14,7 +14,7 @@ Property IsReflecting As %Boolean [ InitialExpression = 0, Private ];
 Method %OnNew(object As %RegisteredObject = "") As %Status
 {
 	if $isobject(object) {
-		set ..ImplementationObject = object
+		set .."__ImplementationObject__" = object
 		do ..CopyFromReflectedActual(object)
 	}
 	return $$$OK
@@ -22,45 +22,17 @@ Method %OnNew(object As %RegisteredObject = "") As %Status
 
 Method Method(methodName As %String) As Stick.Stub.Method
 {
-	set methodStub = ##class(Stick.Stub.Method).%New()
+	set methodStub = ##class(Stick.Stub.Method).%New($this)
 	set i%"__MethodStubs__"(methodName) = methodStub
 	return methodStub
 }
 
 Method CopyFromReflectedActual(object As %RegisteredObject)
 {
-		
+	
 	set ..IsReflecting = 1
 	
-	if object = "" return
-	if '$isobject(object) $$$ThrowStatus($$$ERROR($$$GeneralError, "Object to be mocked is not really an object."))
-	set classname = $classname(object)	
-	
-	set classDefinition = ##class(%Dictionary.ClassDefinition).%OpenId(classname)
-	
-	if '$isobject(classDefinition) {
-		$$$ThrowStatus($$$ERROR($$$GeneralError, "Class definition for the provided object is not available or is invalid."))
-	}
-	
-	for i=1:1:classDefinition.Properties.Count() {
-		set property = classDefinition.Properties.GetAt(i)
-		set propertyName = property.Name
-		
-		if 'property.Private {
-			set $property($this, propertyName) = $property(object, propertyName)
-		} else {
-			set $property($this, propertyName) = "<PRIVATE PROPERTY>"
-		}
-	}
-	
-	for i=1:1:classDefinition.Methods.Count() {
-		set method = classDefinition.Methods.GetAt(i)
-		set methodName = method.Name
-		
-		if 'method.Private {
-			do ..Method(methodName)
-		}
-	}
+	do ##class(Stick.Helper).CopyProperties(object, $this)
 	
 	set ..IsReflecting = 0
 }
@@ -73,7 +45,7 @@ Method %DispatchMethod(methodName As %String, args...) [ ServerOnly = 1 ]
 	if '$isobject($get(i%"__MethodStubs__"(methodName))) $$$ThrowStatus($$$ERROR($$$GeneralError, "Invalid method dispatch: "_methodName))
 	set methodStub = i%"__MethodStubs__"(methodName)
 	
-	return methodStub.CallWhileSpying(..ImplementationObject, methodName, args...)
+	return methodStub.CallWhileSpying(.."__ImplementationObject__", methodName, args...)
 }
 
 /// is used to set the value of an unknown property.
@@ -137,7 +109,7 @@ Method GetMethodSpy(methodName, ByRef args = "") As Stick.Spy.Method
 
 Method ClearStub()
 {
-	set ..ImplementationObject = ""
+	set .."__ImplementationObject__" = ""
 	kill i%"__MethodStubs__"
 	kill i%"__Properties__"
 	kill i%"__PropertySpies__"
@@ -145,9 +117,9 @@ Method ClearStub()
 
 Method ResetStub()
 {
-	set object = ..ImplementationObject
+	set object = .."__ImplementationObject__"
 	do ..ClearStub()
-	do ..CopyFromReflectedActual(object)
+	if $isobject(object) do ..CopyFromReflectedActual(object)
 }
 
 Method ResetMethodStub(methodName As %String)

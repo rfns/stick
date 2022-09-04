@@ -15,28 +15,30 @@ Property LastGetValue;
 
 Method IncreaseGetCount()
 {
-	set ..GetCount = ..GetCount + 1
+  set ..GetCount = ..GetCount + 1
 }
 
 Method IncreaseSetCount()
 {
-	set ..SetCount = ..SetCount + 1
+  set ..SetCount = ..SetCount + 1
 }
 
 Method RecordSetOperation(value As %String)
 {
-	do ..IncreaseSetCount()
-	
-	set ..LastSetValue = value
-	set i%Sets(..SetCount) = value
+  if ..LastSetValue = value  return
+  do ..IncreaseSetCount()
+  
+  set ..LastSetValue = value
+  set i%Sets(..SetCount) = value
 }
 
 Method RecordGetOperation(value As %String)
 {
-	do ..IncreaseGetCount()
-	
-	set ..LastGetValue = value
-	set i%SetCount(..GetCount) = value
+ 
+  do ..IncreaseGetCount()
+  
+  set ..LastGetValue = value
+  set i%SetCount(..GetCount) = value
 }
 
 }

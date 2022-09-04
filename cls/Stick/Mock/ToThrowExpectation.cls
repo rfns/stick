@@ -21,35 +21,5 @@ Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As 
 	return $$$OK
 }
 
-Method ToUseArguments(args...)
-{
-	return ..ExpectationManager.ToUseArguments(args...)
-}
-
-Method ToBeCalledNTimes(n As %Integer) As Stick.Mock.ToBeCalledTimesExpectation
-{
-	return ..ExpectationManager.ToBeCalledNTimes(n)
-}
-
-Method ToBeCalledOnce() As Stick.Mock.ToBeCalledTimesExpectation
-{
-	return ..ToBeCalledNTimes(1)
-}
-
-Method ToBeCalledTwice() As Stick.Mock.ToBeCalledTimesExpectation
-{
-	return ..ToBeCalledNTimes(2)
-}
-
-Method ToBeCalledThrice() As Stick.Mock.ToBeCalledTimesExpectation
-{
-	return ..ToBeCalledNTimes(3)
-}
-
-Method ToPassthrough() As Stick.Mock.ToPassthroughExpectation
-{
-	return ..ExpectationManager.ToPassthrough()
-}
-
 }
 

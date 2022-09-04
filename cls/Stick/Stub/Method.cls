@@ -1,12 +1,15 @@
 Class Stick.Stub.Method Extends %RegisteredObject
 {
 
+Property Stub As Stick.Stub [ Private ];
+
 Property BehaviorAssignments As list Of Stick.Stub.BehaviorAssignment [ Private ];
 
 Property DefaultBehaviorAssignment As Stick.Stub.BehaviorAssignment [ Private ];
 
-Method %OnNew() As %Status
+Method %OnNew(stub As Stick.Stub) As %Status
 {
+	set ..Stub = stub
 	set ..DefaultBehaviorAssignment = ##class(Stick.Stub.BehaviorAssignment).%New()
 	return $$$OK
 }
@@ -49,14 +52,15 @@ Method CallWhileSpying(implementationObject As %RegisteredObject = "", methodNam
 	set returnValue = ""
 	set uncaughtException = 0
 	
-	if assignment.IsPassthrough() && $isobject(implementationObject) {
+	if assignment.IsPassthrough() && $isobject(implementationObject) {		
 		try {
-			set returnValue = $method(implementationObject, methodName, args...) 
+			set returnValue = $method(implementationObject, methodName, args...)
+			do ##class(Stick.Helper).CopyProperties(implementationObject, ..Stub)
 		} catch ex {
 			if $System.Status.GetErrorText(ex.AsStatus()) '[ "<COMMAND>" {
 				set exception = ex
 			}
-		}
+		}		
 	}
 	
 	if 'assignment.IsPassthrough() && assignment.HasReturnValue() {

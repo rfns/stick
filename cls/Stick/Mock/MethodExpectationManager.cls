@@ -3,56 +3,60 @@ Class Stick.Mock.MethodExpectationManager Extends (%RegisteredObject, Stick.Mock
 
 Method ToBeCalledNTimes(n As %Integer) As Stick.Mock.ToBeCalledTimesExpectation
 {
-	return ..AddExpectation(##class(Stick.Mock.ToBeCalledTimesExpectation).Assign($this, n))
+  return ..AddExpectation(##class(Stick.Mock.ToBeCalledTimesExpectation).Assign($this, n))
 }
 
 Method ToBeCalledOnce() As Stick.Mock.ToBeCalledTimesExpectation
 {
-	return ..ToBeCalledNTimes(1)
+  return ..ToBeCalledNTimes(1)
 }
 
 Method ToBeCalledTwice() As Stick.Mock.ToBeCalledTimesExpectation
 {
-	return ..ToBeCalledNTimes(2)
+  return ..ToBeCalledNTimes(2)
 }
 
 Method ToBeCalledThrice() As Stick.Mock.ToBeCalledTimesExpectation
 {
-	return ..ToBeCalledNTimes(3)
+  return ..ToBeCalledNTimes(3)
 }
 
-Method ToUseArguments(args...) As Stick.Mock.ToUseArgumentsExpectation
+Method ToReceiveArguments(args...) As Stick.Mock.ToUseArgumentsExpectation
 {
-	return ..AddExpectation(##class(Stick.Mock.ToUseArgumentsExpectation).Assign($this, .args))
+  return ..AddExpectation(##class(Stick.Mock.ToUseArgumentsExpectation).Assign($this, .args))
 }
 
 Method ToReturn(value = "") As Stick.Mock.MethodExpectationManager
 {
-	return ..AddExpectation(##class(Stick.Mock.ToReturnExpectation).Assign($this, value))
+  return ..AddExpectation(##class(Stick.Mock.ToReturnExpectation).Assign($this, value))
 }
 
 Method ToThrow(exception As %Exception.StatusException) As Stick.Mock.ToThrowExpectation
 {
-	return ..AddExpectation(##class(Stick.Mock.ToThrowExpectation).Assign($this, exception))
+  return ..AddExpectation(##class(Stick.Mock.ToThrowExpectation).Assign($this, exception))
 }
 
 Method ToPassthrough() As Stick.Mock.ToPassthroughExpectation
 {
-	return ..AddExpectation(##class(Stick.Mock.ToPassthroughExpectation).Assign($this))
+  return ..AddExpectation(##class(Stick.Mock.ToPassthroughExpectation).Assign($this))
 }
 
 Method GetSpy() As Stick.Spy.Method
 {
-	return ..Mock.GetStub().GetMethodSpy(..GroupKey)
+  return ..Mock.GetStub().GetMethodSpy(..GroupKey)
 }
 
-Method OnPreEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String)
+Method OnPreEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String, callsExpected As %Integer) As %Status
 {
-	if '$isobject(spy) || ($isobject(spy) && '$data(spy.Calls)) {
-		return $$$ERROR($$$GeneralError, $$$FormatText("Stubbed method '%1' doesn't seem to be called.", methodName))
-	}
-	
-	return $$$OK
+  if spy.CallCount > callsExpected {
+    return $$$ERROR($$$GeneralError, $$$FormatText("Unexpected method call: '%1' seems to have been called more than expected. (got called %2 but expected only %3 times)", methodName, spy.CallCount, callIndex))
+  }
+
+  if '$isobject(spy) || ($isobject(spy) && '$data(spy.Calls)) {
+    return $$$ERROR($$$GeneralError, $$$FormatText("Stubbed method '%1' doesn't seem to be called.", methodName))
+  }
+  
+  return $$$OK
 }
 
 }
