@@ -143,12 +143,5 @@ Method ResetMethodExpectation(methodName As %String)
   if $isobject(methodStub)  do methodStub.Reset()
 }
 
-Method ResetPropertyExpectation(methodName As %String)
-{
-  do ..PropertyExpectationManagers.RemoveAt(methodName) 
-  set methodStub = ..GetStub().GetMethodStub(methodName)
-  if $isobject(methodStub)  do methodStub.Reset()
-}
-
 }
 
