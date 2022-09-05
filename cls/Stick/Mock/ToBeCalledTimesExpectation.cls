@@ -20,12 +20,17 @@ Method AndThrow(exception As %Exception.AbstractException) As Stick.Mock.ToThrow
   return ..ExpectationManager.ToThrow(exception)
 }
 
-Method WithArguments(args...) As Stick.Mock.ToUseArgumentsExpectation
+Method ToReceiveArguments(args...) As Stick.Mock.ToReceiveArgumentsExpectation
 {
   return ..ExpectationManager.ToReceiveArguments(args...)
 }
 
-Method AndPassthrough() As Stick.Mock.ToPassthroughExpectation
+Method ToNotReceiveArguments(args...) As Stick.Mock.ToNotReceiveArgumentsExpectation
+{
+  return ..ExpectationManager.ToNotReceiveArguments(args...)
+}
+
+Method ToPassthrough() As Stick.Mock.ToPassthroughExpectation
 {
   return ..ExpectationManager.ToPassthrough()
 }

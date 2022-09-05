@@ -9,12 +9,12 @@ Property Arguments As %String [ MultiDimensional, ReadOnly ];
 
 Method %OnNew(ByRef args = "", exception As %Exception.AbstractException = "", returnValue = "") As %Status
 {
-	set i%ExceptionThrown = exception
-	set i%ReturnedValue = returnValue
-	
-	merge i%Arguments = args
-	
-	return $$$OK
+  set r%ExceptionThrown = exception
+  set i%ReturnedValue = returnValue
+  
+  merge i%Arguments = args
+  
+  return $$$OK
 }
 
 }

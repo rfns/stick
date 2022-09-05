@@ -20,7 +20,7 @@ Method %OnNew(object As %RegisteredObject = "") As %Status
 	return $$$OK
 }
 
-Method Method(methodName As %String) As Stick.Stub.Method
+Method When(methodName As %String) As Stick.Stub.Method
 {
 	set methodStub = ##class(Stick.Stub.Method).%New($this)
 	set i%"__MethodStubs__"(methodName) = methodStub
@@ -102,9 +102,9 @@ Method IsMethodStubbed(methodName As %String) As %Boolean
 	return $isobject($get(i%"__MethodStubs__"(methodName)))
 }
 
-Method GetMethodSpy(methodName, ByRef args = "") As Stick.Spy.Method
+Method GetMethodSpy(methodName, args...) As Stick.Spy.Method
 {
-	return ..GetMethodStub(methodName).GetMethodSpy(.args)
+	return ..GetMethodStub(methodName).GetMethodSpy(args...)
 }
 
 Method ClearStub()

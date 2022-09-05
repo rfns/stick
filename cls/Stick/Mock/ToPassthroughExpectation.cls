@@ -19,5 +19,15 @@ Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As 
   return $$$OK
 }
 
+Method AndReturn(value = "") As Stick.Mock.ToReturnExpectation
+{
+  return ..ExpectationManager.ToReturn(value)
+}
+
+Method AndThrow(exception As %Exception.AbstractException) As Stick.Mock.ToThrowExpectation
+{
+  return ..ExpectationManager.ToThrow(exception)
+}
+
 }
 

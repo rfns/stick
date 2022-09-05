@@ -21,9 +21,14 @@ Method ToBeCalledThrice() As Stick.Mock.ToBeCalledTimesExpectation
   return ..ToBeCalledNTimes(3)
 }
 
-Method ToReceiveArguments(args...) As Stick.Mock.ToUseArgumentsExpectation
+Method ToReceiveArguments(args...) As Stick.Mock.ToReceiveArgumentsExpectation
 {
-  return ..AddExpectation(##class(Stick.Mock.ToUseArgumentsExpectation).Assign($this, .args))
+  return ..AddExpectation(##class(Stick.Mock.ToReceiveArgumentsExpectation).Assign($this, .args))
+}
+
+Method ToNotReceiveArguments(args...) As Stick.Mock.ToNotReceiveArgumentsExpectation
+{
+  return ..AddExpectation(##class(Stick.Mock.ToNotReceiveArgumentsExpectation).Assign($this, .args))
 }
 
 Method ToReturn(value = "") As Stick.Mock.MethodExpectationManager

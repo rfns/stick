@@ -21,7 +21,7 @@ ClassMethod Create(object As %RegisteredObject = "") As Stick.Mock
 Method EnsureMethodStubExists(methodName As %String) [ Private ]
 {
   if '..Stub.IsMethodStubbed(methodName) {
-    do ..Stub.Method(methodName)
+    do ..Stub.When(methodName)
   }
 }
 
@@ -31,8 +31,7 @@ Method EnsureMethodStubExists(methodName As %String) [ Private ]
 Method %DispatchMethod(methodName As %String, args...) [ ServerOnly = 1 ]
 {
   do ..EnsureMethodStubExists(methodName)
-  do $method(..Stub, methodName, args...)
-  return $this
+  return $method(..Stub, methodName, args...)
 }
 
 /// Is used to get the value of an unknown property.
@@ -139,6 +138,13 @@ Method ResetMock()
 Method ResetMethodExpectation(methodName As %String)
 {
   do ..MethodExpectationManagers.RemoveAt(methodName) 
+  set methodStub = ..GetStub().GetMethodStub(methodName)
+  if $isobject(methodStub)  do methodStub.Reset()
+}
+
+Method ResetPropertyExpectation(methodName As %String)
+{
+  do ..PropertyExpectationManagers.RemoveAt(methodName) 
   set methodStub = ..GetStub().GetMethodStub(methodName)
   if $isobject(methodStub)  do methodStub.Reset()
 }

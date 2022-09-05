@@ -1,4 +1,4 @@
-Class Stick.Mock.ToUseArgumentsExpectation Extends (%RegisteredObject, Stick.Mock.AbstractExpectation)
+Class Stick.Mock.ToReceiveArgumentsExpectation Extends (%RegisteredObject, Stick.Mock.AbstractExpectation)
 {
 
 Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String) As %Status
@@ -35,27 +35,27 @@ Method AndThrow(exception As %Exception.AbstractException) As Stick.Mock.ToThrow
   return ..ExpectationManager.ToThrow(exception)
 }
 
-Method AndBeCalledOnce() As Stick.Mock.ToBeCalledTimesExpectation
+Method ToBeCalledOnce() As Stick.Mock.ToBeCalledTimesExpectation
 {
   return ..ExpectationManager.ToBeCalledOnce()
 }
 
-Method AndBeCalledTwice() As Stick.Mock.ToBeCalledTimesExpectation
+Method ToBeCalledTwice() As Stick.Mock.ToBeCalledTimesExpectation
 {
   return ..ExpectationManager.ToBeCalledTwice()
 }
 
-Method AndBeCalledThrice() As Stick.Mock.ToBeCalledTimesExpectation
+Method ToBeCalledThrice() As Stick.Mock.ToBeCalledTimesExpectation
 {
   return ..ExpectationManager.ToBeCalledThrice()
 }
 
-Method AndBeCalledNTimes(n As %Integer) As Stick.Mock.ToBeCalledTimesExpectation
+Method ToBeCalledNTimes(n As %Integer) As Stick.Mock.ToBeCalledTimesExpectation
 {
   return ..ExpectationManager.ToBeCalledNTimes(n)
 }
 
-Method AndPassthrough() As Stick.Mock.ToPassthroughExpectation
+Method ToPassthrough() As Stick.Mock.ToPassthroughExpectation
 {
   return ..ExpectationManager.ToPassthrough()
 }
