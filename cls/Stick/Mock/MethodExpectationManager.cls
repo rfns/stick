@@ -54,8 +54,12 @@ Method GetSpy() As Stick.Spy.Method
 Method OnPreEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String, callsExpected As %Integer) As %Status
 {
   if spy.CallCount > callsExpected {
-    return $$$ERROR($$$GeneralError, $$$FormatText("Unexpected method call: '%1' seems to have been called more than expected. (got called %2 but expected only %3 times)", methodName, spy.CallCount, callIndex))
+    return $$$ERROR($$$GeneralError, $$$FormatText("Unexpected method call: '%1' seems to have been called more than expected. (got called %2 but expected only %3 time(s))", methodName, spy.CallCount, callIndex))
   }
+  
+  if spy.CallCount < callsExpected {
+    return $$$ERROR($$$GeneralError, $$$FormatText("Missing expected call: expected '%1' to be called %2 time(s). (got called only %3 times(s))", methodName, callsExpected, spy.CallCount))
+  }  
 
   if '$isobject(spy) || ($isobject(spy) && '$data(spy.Calls)) {
     return $$$ERROR($$$GeneralError, $$$FormatText("Stubbed method '%1' doesn't seem to be called.", methodName))
