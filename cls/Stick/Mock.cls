@@ -46,9 +46,9 @@ Method %DispatchSetProperty(propertyName As %String, value) [ ServerOnly = 1 ]
   set $property(..Stub, propertyName) = value
 }
 
-Method ExpectsMethod(methodName As %String) As Stick.Mock.MethodExpectationManager
+Method Expects(methodName As %String) As Stick.Mock.MethodExpectationManager
 {
-  do ..EnsureMethodStubExists(methodName)  
+  do ..EnsureMethodStubExists(methodName)
   return ##class(Stick.Mock.MethodExpectationManager).%New($this, methodName)
 }
 
@@ -85,11 +85,11 @@ Method AddPropertyExpectationManager(expectationManager As Stick.Mock.PropertyEx
 Method AddToExpectationManagerGroups(groups As %ArrayOfObjects, expectationManager As Stick.Mock.AbstractExpectationManager) [ Private ]
 {
   set group = ##class(%ListOfObjects).%New()
-  
-  if groups.IsDefined(expectationManager.GroupKey) {    
-    set group = groups.GetAt(expectationManager.GroupKey)   
+
+  if groups.IsDefined(expectationManager.GroupKey) {
+    set group = groups.GetAt(expectationManager.GroupKey)
   }
-  
+
   do group.Insert(expectationManager)
   do groups.SetAt(group, expectationManager.GroupKey)
 }
@@ -97,33 +97,33 @@ Method AddToExpectationManagerGroups(groups As %ArrayOfObjects, expectationManag
 Method VerifyExpectationManagerGroups(expectationManagerGroups As %ArrayOfObjects) As %Status [ Private ]
 {
   set key = ""
-  
-  try {   
+
+  try {
     while 1 {
       set managerGroup = expectationManagerGroups.GetNext(.key)
       quit:(key = "" || (managerGroup=""))
-    
+
       set expectationGroupCount = managerGroup.Count()
       for i=1:1:expectationGroupCount  do managerGroup.GetAt(i).Verify(i, expectationGroupCount)
     }
   } catch ex {
     return ex.AsStatus()
   }
-  
+
   return $$$OK
 }
 
 Method Verify() As %Status
 {
   set sc = $$$OK
-  
+
   try {
     $$$ThrowOnError(..VerifyExpectationManagerGroups(..MethodExpectationManagers))
     $$$ThrowOnError(..VerifyExpectationManagerGroups(..PropertyExpectationManagers))
   } catch ex {
     set sc = ex.AsStatus()
-  }   
-  
+  }
+
   do ..ResetMock()
   return sc
 }
@@ -137,14 +137,14 @@ Method ResetMock()
 
 Method ResetMethodExpectation(methodName As %String)
 {
-  do ..MethodExpectationManagers.RemoveAt(methodName) 
+  do ..MethodExpectationManagers.RemoveAt(methodName)
   set methodStub = ..GetStub().GetMethodStub(methodName)
   if $isobject(methodStub)  do methodStub.Reset()
 }
 
 Method ResetPropertyExpectation(methodName As %String)
 {
-  do ..PropertyExpectationManagers.RemoveAt(methodName) 
+  do ..PropertyExpectationManagers.RemoveAt(methodName)
   set methodStub = ..GetStub().GetMethodStub(methodName)
   if $isobject(methodStub)  do methodStub.Reset()
 }
