@@ -1,9 +1,15 @@
 Class Stick.Mock.ToReceiveArgumentsExpectation Extends (%RegisteredObject, Stick.Mock.AbstractExpectation)
 {
 
-Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String) As %Status
+Method AddBehavior(methodStub As Stick.Stub.Method)
 {
-  merge args = spy.Calls(callIndex).Arguments
+  merge args = ..Value
+  do methodStub.CallWithArguments(args...)
+}
+
+Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String) As %Status
+{
+  merge args = spy.GetMethodSpy(methodName).Calls(callIndex).Arguments
   merge expectedArgs = ..Value
   
   set usedArgsList = ""
@@ -12,7 +18,7 @@ Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As 
   do SerializeArgs
     
   if '##class(Stick.Helper).ArgumentCompare(.expectedArgs, .args) {
-    return $$$ERROR($$$GeneralError, $$$FormatText("Method '%1' should have been called with args '%2', (used '%3' instead)", methodName, $lts(expectedArgsList), $lts(usedArgsList)))
+    return $$$ERROR($$$GeneralError, $$$FormatText("Method '%1' should have been called with args '%2' (received '%3' instead)", methodName, $lts(expectedArgsList), $lts(usedArgsList)))
   }
   
   return $$$OK

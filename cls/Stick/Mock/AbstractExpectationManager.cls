@@ -31,22 +31,17 @@ Method GetStub() As Stick.Stub
   return ..Mock.GetStub()
 }
 
-Method GetSpy()
+Method GetSpy() As Stick.Spy
 {
-  return ..GetStub().GetSpy(..GroupKey)
+  return ..GetStub().GetSpy()
 }
 
-Method GetPropertySpy() As Stick.Spy.ICommon
-{
-  return ..GetStub().GetPropertySpy(..GroupKey)
-}
-
-Method PreEvaluate(callIndex As %Integer, spy As Stick.Spy.ICommon, groupKey As %String, callsExpected As %Integer) As %Status
+Method PreEvaluate(callIndex As %Integer, spy As Stick.Spy, groupKey As %String, callsExpected As %Integer) As %Status
 {
   return ..OnPreEvaluate(callIndex, spy, groupKey, callsExpected)
 }
 
-Method OnPreEvaluate(callIndex As %Integer, spy As Stick.Spy.ICommon, groupKey As %String, callsExpected As %Integer) As %Status
+Method OnPreEvaluate(callIndex As %Integer, spy As Stick.Spy, groupKey As %String, callsExpected As %Integer) As %Status
 {
   return $$$OK
 }

@@ -1,34 +1,34 @@
-Class Stick.Spy.Property Extends (%RegisteredObject, Stick.Spy.ICommon)
+Class Stick.Spy.Property Extends (%RegisteredObject, Stick.Spy.Interface)
 {
 
-Property GetCount As %Integer [ InitialExpression = 0 ];
+Property GetCount As %Integer [ InitialExpression = 0, ReadOnly ];
 
-Property SetCount As %Integer [ InitialExpression = 0 ];
+Property SetCount As %Integer [ InitialExpression = 0, ReadOnly ];
 
-Property Sets [ MultiDimensional ];
+Property Sets [ MultiDimensional, ReadOnly ];
 
-Property Gets [ MultiDimensional ];
+Property Gets [ MultiDimensional, ReadOnly ];
 
-Property LastSetValue;
+Property LastSetValue [ ReadOnly ];
 
 Property LastGetValue;
 
 Method IncreaseGetCount()
 {
-  set ..GetCount = ..GetCount + 1
+  set i%GetCount = ..GetCount + 1
 }
 
 Method IncreaseSetCount()
 {
-  set ..SetCount = ..SetCount + 1
+  set i%SetCount = ..SetCount + 1
 }
 
 Method RecordSetOperation(value As %String)
 {
-  if ..LastSetValue = value  return
+  if i%LastSetValue = value  return
   do ..IncreaseSetCount()
   
-  set ..LastSetValue = value
+  set i%LastSetValue = value
   set i%Sets(..SetCount) = value
 }
 
@@ -37,8 +37,8 @@ Method RecordGetOperation(value As %String)
  
   do ..IncreaseGetCount()
   
-  set ..LastGetValue = value
-  set i%SetCount(..GetCount) = value
+  set i%LastGetValue = value
+  set i%Gets(..GetCount) = value
 }
 
 }

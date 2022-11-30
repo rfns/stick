@@ -36,6 +36,7 @@ Method SetValue(ByRef value = "")
 
 Method DoAssert(callIndex As %Integer, callsExpected As %Integer)
 {
+ 
   set spy = ..ExpectationManager.GetSpy()
   set groupKey = ..ExpectationManager.GroupKey
   
@@ -45,7 +46,7 @@ Method DoAssert(callIndex As %Integer, callsExpected As %Integer)
   return $$$OK
 }
 
-Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.ICommon, groupKey As %String)
+Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, groupKey As %String)
 {
 }
 

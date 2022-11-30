@@ -46,23 +46,20 @@ Method ToPassthrough() As Stick.Mock.ToPassthroughExpectation
   return ..AddExpectation(##class(Stick.Mock.ToPassthroughExpectation).Assign($this))
 }
 
-Method GetSpy() As Stick.Spy.Method
+Method OnPreEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String, callsExpected As %Integer) As %Status
 {
-  return ..Mock.GetStub().GetMethodSpy(..GroupKey)
-}
-
-Method OnPreEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String, callsExpected As %Integer) As %Status
-{
-  if spy.CallCount > callsExpected {
-    return $$$ERROR($$$GeneralError, $$$FormatText("Unexpected method call: '%1' seems to have been called more than expected. (got called %2 but expected only %3 time(s))", methodName, spy.CallCount, callIndex))
+  set methodSpy = spy.GetMethodSpy(methodName)
+  
+  if '$isobject(methodSpy) || ($isobject(methodSpy) && '$data(methodSpy.Calls)) {
+    return $$$ERROR($$$GeneralError, $$$FormatText("method '%1' doesn't seem to be called.", methodName))
+  }  
+  
+  if methodSpy.CallCount > callsExpected {
+    return $$$ERROR($$$GeneralError, $$$FormatText("Unexpected method call: '%1' seems to have been called more than expected. (got called %2 but expected only %3 time(s))", methodName, methodSpy.CallCount, callsExpected))
   }
   
-  if spy.CallCount < callsExpected {
-    return $$$ERROR($$$GeneralError, $$$FormatText("Missing expected call: expected '%1' to be called %2 time(s). (got called only %3 times(s))", methodName, callsExpected, spy.CallCount))
-  }  
-
-  if '$isobject(spy) || ($isobject(spy) && '$data(spy.Calls)) {
-    return $$$ERROR($$$GeneralError, $$$FormatText("Stubbed method '%1' doesn't seem to be called.", methodName))
+  if methodSpy.CallCount < callsExpected {
+    return $$$ERROR($$$GeneralError, $$$FormatText("Missing method call: expected '%1' to be called %2 time(s). (got called only %3 times(s))", methodName, callsExpected, methodSpy.CallCount))
   }
   
   return $$$OK

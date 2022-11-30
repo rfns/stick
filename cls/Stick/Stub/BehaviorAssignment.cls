@@ -14,7 +14,7 @@ Method %OnNew(ByRef args = "") As %Status
   merge i%KeyArguments = args
   set ..Behaviors = ##class(%ListOfObjects).%New()
   set ..Spy = ##class(Stick.Spy.Method).%New()
-
+  
   return $$$OK
 }
 
@@ -25,7 +25,6 @@ Method GetSpy() As Stick.Spy.Method
 
 Method IncrementCallCount()
 {
-  do ..GetSpy().IncrementCallCount()
   set ..CallIndex = ..CallIndex + 1
 }
 
@@ -36,7 +35,7 @@ Method GetCurrentBehavior()
 
 Method AddBehavior() As %Status
 {
-
+  
   set behavior = ##class(Stick.Stub.Behavior).%New()
   do ..Behaviors.Insert(behavior)
   return behavior
@@ -64,7 +63,7 @@ Method HasReturnValue() As %Boolean
 {
   set behavior = ..GetCurrentBehavior()
   if '$isobject(behavior) return 0
-
+  
   return behavior.HasReturnValue
 }
 
@@ -72,7 +71,7 @@ Method HasException() As %Boolean
 {
   set behavior = ..GetCurrentBehavior()
   if '$isobject(behavior) return 0
-
+  
   return $isobject(behavior.Exception)
 }
 
@@ -90,7 +89,7 @@ Method IsPassthrough()
 {
   set behavior = ..GetCurrentBehavior()
   if '$isobject(behavior) return 0
-
+  
   return behavior.Passthrough
 }
 

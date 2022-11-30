@@ -6,10 +6,12 @@ Method AddBehavior(methodStub As Stick.Stub.Method)
   do methodStub.ThenReturn(..Value)
 }
 
-Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String) As %Status
+Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String) As %Status
 {
-  if spy.Calls(callIndex).ReturnedValue '= ..Value {
-    set returnedValue = spy.Calls(callIndex).ReturnedValue
+  set methodSpy = spy.GetMethodSpy(methodName)
+  
+  if methodSpy.Calls(callIndex).ReturnedValue '= ..Value {
+    set returnedValue = methodSpy.Calls(callIndex).ReturnedValue
     if $extract(returnedValue, 1, 2) = "0 " && $listvalid($extract(3, $length(returnedValue))) {
       set returnedValue = $System.Status.GetErrorText(returnedValue)
     }
