@@ -3,13 +3,14 @@ Class Stick.Mock.ToPassthroughExpectation Extends (%RegisteredObject, Stick.Mock
 
 Method AddBehavior(methodStub As Stick.Stub.Method)
 {
-  do methodStub.ThenPassthrough()
+  for i=1:1:methodStub.LastCallLimitIncrease  do methodStub.ThenPassthrough()
 }
 
-Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String)
+Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String)
 {
-    
-  set exception = spy.Calls(callIndex).ExceptionThrown
+  
+  set methodSpy = spy.GetMethod(methodName)
+  set exception = methodSpy.Calls(callIndex).ExceptionThrown
   
   if $isobject(exception) {
     set receivedMessage = $System.Status.GetErrorText(exception.AsStatus())

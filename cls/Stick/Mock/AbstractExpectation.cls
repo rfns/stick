@@ -16,9 +16,8 @@ ClassMethod Assign(manager As Stick.Mock.AbstractExpectationManager, ByRef value
   set expectation = ..%New(manager)
   do expectation.SetValue(.value)
   
-  if expectation.GetExpectationManager().%IsA("Stick.Mock.MethodExpectationManager") {
-    do expectation.AddBehavior(manager.GetStub().GetMethodStub(manager.GroupKey))
-  }
+  do expectation.AddBehavior(manager.GetStub().GetMethodStub(manager.GroupKey))
+  do expectation.SetSharedExpectation(manager)
   
   return expectation
 }
@@ -28,19 +27,24 @@ Method GetExpectationManager() As Stick.Mock.AbstractExpectationManager
   return ..ExpectationManager
 }
 
+Method SetSharedExpectation(manager As Stick.Mock.AbstractExpectationManager)
+{
+}
+
 Method SetValue(ByRef value = "")
 {
   if $data(value) = 1  set ..Value = value
   if $data(value) > 1  merge i%Value = value
 }
 
-Method DoAssert(callIndex As %Integer, callsExpected As %Integer)
+Method Met()
 {
  
   set spy = ..ExpectationManager.GetSpy()
   set groupKey = ..ExpectationManager.GroupKey
+  set callIndex = ..ExpectationManager.CallsExpected
   
-  $$$QuitOnError(..ExpectationManager.PreEvaluate(callIndex, spy, groupKey, callsExpected))
+  $$$ThrowOnError(..ExpectationManager.PreEvaluate(spy))
   $$$ThrowOnError(..OnEvaluate(callIndex, spy, groupKey))
   
   return $$$OK

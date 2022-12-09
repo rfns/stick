@@ -1,26 +1,101 @@
+Include (%occErrors, stick)
+
 Class Stick.Spy Extends %RegisteredObject
 {
 
-Property "__Properties__" [ MultiDimensional, Private ];
+Property "__Properties__" [ Internal, MultiDimensional, Private ];
 
-Property "__PropertySpies__" As Stick.Spy.Property [ MultiDimensional, Private ];
+Property "__MultiDimensionals__" [ Internal, MultiDimensional, Private ];
 
-Property "__MethodSpies__" As Stick.Spy.Method [ MultiDimensional, Private ];
+Property "__PropertySpies__" As Stick.Spy.Property [ Internal, MultiDimensional, Private ];
+
+Property "__MethodSpies__" As Stick.Spy.Method [ Internal, MultiDimensional, Private ];
+
+Property "__Stub__" As Stick.Stub [ Internal, Private ];
 
 Property ReflectionMode As %Boolean [ InitialExpression = 0 ];
 
+Property RealObject As %RegisteredObject [ Private ];
+
+Method %OnNew(object As %String = "") As %Status
+{
+  if $isobject(object) {
+    if object.%IsA($classname()) {
+      $$$ThrowStatus($$$ERROR($$$GeneralError, "Spied object cannot be another spy."))
+    }
+    
+    set ..RealObject = object
+    do .."_FillUsingRealObject"()
+  }  
+  
+  return $$$OK
+}
+
+Method UseThisStub(stub As Stick.Stub)
+{
+  set .."__Stub__" = stub
+  return $this
+}
+
+Method "_FillUsingRealObject"() [ Internal, Private ]
+{
+  set ..ReflectionMode = 1
+  do ##class(Stick.Helper).CopyProperties(..RealObject, $this)
+  set ..ReflectionMode = 0
+}
+
 Method %DispatchMethod(methodName As %String, args...)
 {
-  set methodSpy = ..EnsureMethodSpyExists(methodName)
-  do methodSpy.Record(.args)
+  
+  if .."_MultiDimensionalExists"(methodName, .args) {
+    return .."_GetMultiDimensionalValue"(methodName, .args)
+  }
+  
+  return .."_DelegateMethodCall"(methodName, args...)
+}
+
+Method "_DelegateMethodCall"(methodName As %String, args...) [ Internal, Private ]
+{
+ 
+  set realMethodName = $$$RealMethodName(methodName)
+  set shouldCallStub = (
+    $isobject(.."__Stub__") &&
+    .."__Stub__".IsMethodStubbed(realMethodName) &&
+    '.."__Stub__".GetMethodStub(realMethodName).GetMatchingBehaviorAssignment(.args).IsPassthrough()
+  )  
+  
+  if shouldCallStub {
+    return .."__Stub__".GetMethodStub(methodName).CallMethod(args...)
+  }
+  
+  if $isobject(..RealObject) {
+    return .."_ForwardToImplementation"(methodName, args...)
+  }
+  
+  do .."_EnsureMethodSpyExists"($$$RealMethodName(methodName)).Record(.args)
   return ""
 }
 
-/// is used to set the value of an unknown property.
+Method "_ForwardToImplementation"(methodName As %String, args...) [ Internal, Private ]
+{
+  set returnValue = ""
+  set exception = ""
+  set realMethodName = $$$RealMethodName(methodName)
+  
+  try {  
+    set returnValue = ##class(Stick.Helper).RunMethodWithThisRebinded($this, $classname(..RealObject), realMethodName, args...)
+  } catch ex {
+    set exception = ex
+  }
+  
+  do .."_EnsureMethodSpyExists"(realMethodName).Record(.args, exception, returnValue)
+  return returnValue
+}
+
 Method %DispatchSetProperty(propertyName As %String, value) [ ServerOnly = 1 ]
 {
   
-  set propertySpy = ..EnsurePropertySpyExists(propertyName) 
+  set propertySpy = .."_EnsurePropertySpyExists"(propertyName) 
   
   if '..ReflectionMode {
     do propertySpy.RecordSetOperation(value)  
@@ -29,20 +104,28 @@ Method %DispatchSetProperty(propertyName As %String, value) [ ServerOnly = 1 ]
   set .."__Properties__"(propertyName) = value
 }
 
-/// Is used to get the value of an unknown property.
-Method %DispatchGetProperty(propertyName As %String) [ ServerOnly = 1 ]
+Method %DispatchGetProperty(propertyName As %String)
 {
-  set propertySpy = ..EnsurePropertySpyExists(propertyName)
-  
-  if '..ReflectionMode {    
-    set value = $get(i%"__Properties__"(propertyName))
-    do propertySpy.RecordGetOperation(value)
+  if .."_MultiDimensionalExists"(propertyName) {
+    return .."_GetMultiDimensionalValue"(propertyName)
   }
   
-  return $get(i%"__Properties__"(propertyName))
+  set propertySpy = .."_EnsurePropertySpyExists"(propertyName)
+  set valueExists = $data(i%"__Properties__"(propertyName))
+  
+  set value = $get(i%"__Properties__"(propertyName)) 
+  
+  if 'valueExists {
+    set value = ..%New()
+    set i%"__Properties__"(propertyName) = value
+  }
+       
+  if '..ReflectionMode do propertySpy.RecordGetOperation(value)
+  
+  return value
 }
 
-Method EnsurePropertySpyExists(propertyName As %String) As Stick.Spy.Property
+Method "_EnsurePropertySpyExists"(propertyName As %String) As Stick.Spy.Property [ Internal, Private ]
 {
   set spy = $get(i%"__PropertySpies__"(propertyName))
   if $isobject(spy) return spy
@@ -52,7 +135,7 @@ Method EnsurePropertySpyExists(propertyName As %String) As Stick.Spy.Property
   return spy
 }
 
-Method EnsureMethodSpyExists(methodName As %String) As Stick.Spy.Property
+Method "_EnsureMethodSpyExists"(methodName As %String) As Stick.Spy.Method [ Internal, Private ]
 {
   set spy = $get(i%"__MethodSpies__"(methodName))
   if $isobject(spy) return spy
@@ -64,18 +147,52 @@ Method EnsureMethodSpyExists(methodName As %String) As Stick.Spy.Property
 
 Method GetMethodSpy(methodName As %String) As Stick.Spy.Method
 {
-  return ..EnsureMethodSpyExists(methodName)
+  return .."_EnsureMethodSpyExists"(methodName)
 }
 
 Method GetPropertySpy(propertyName As %String) As Stick.Spy.Property
 {
-  return ..EnsurePropertySpyExists(propertyName)
+  return .."_EnsurePropertySpyExists"(propertyName)
 }
 
-Method Reset()
+Method Clear()
 {
-  set ..LastException = ""
-  set ..LastReturnedValue = ""
+  set ..ReflectionMode = 0
+  
+  kill i%"__Properties__"
+  kill i%"__MethodSpies__"
+  kill i%"__PropertySpies__"
+  kill i%"__MultiDimensionals__"
+  
+  if $isobject(..RealObject) do .."_FillUsingRealObject"()
+}
+
+/// Is used to set the value of an unknown multidimensional property.
+Method %DispatchSetMultidimProperty(property As %String, value, subscripts...)
+{
+  $$$MultiAsSerial(subscripts, serializedSubs)  
+  set @($$$FormatText("i%""__MultiDimensionals__""(""%1"", %2)", property, $lts(serializedSubs))) = value
+}
+
+Method "_MultiDimensionalExists"(name As %String, ByRef subscripts = "") [ Internal, Private ]
+{
+  
+  if subscripts < 1 {
+    if $data(@($$$FormatText("i%""__MultiDimensionals__""(""%1"")", name))) return 1
+    return 0    
+  }
+  
+  $$$MultiAsSerial(subscripts, serializedSubs)
+  return $data(@($$$FormatText("i%""__MultiDimensionals__""(""%1"", %2)", name, $lts(serializedSubs)))) > 0
+}
+
+Method "_GetMultiDimensionalValue"(name As %String, ByRef subscripts = "") [ Internal, Private ]
+{
+  if '.."_MultiDimensionalExists"(name, .subscripts) return ""
+  if subscripts < 1 $$$ThrowStatus($$$ERROR($$$GeneralError, "Listing multidimensional values is not allowed when using spy."))
+  
+  $$$MultiAsSerial(subscripts, serializedSubs)  
+  return $get(@($$$FormatText("i%""__MultiDimensionals__""(""%1"", %2)", name, $lts(serializedSubs))))
 }
 
 }

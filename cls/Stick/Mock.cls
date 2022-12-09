@@ -3,17 +3,19 @@ Class Stick.Mock Extends %RegisteredObject
 
 Property Stub As Stick.Stub [ Private ];
 
-Property MethodExpectationManagers As array Of Stick.Mock.MethodExpectationManager [ Private ];
+Property MethodExpectationManagers As list Of Stick.Mock.MethodExpectationManager [ Private ];
 
-Method %OnNew(object As %RegisteredObject = "") As %Status
+Property LastExpectationGroupIndex As %Integer [ InitialExpression = 0 ];
+
+Method %OnNew(className As %RegisteredObject = "", args...) As %Status
 {
-  set ..Stub = ##class(Stick.Stub).%New(object)
+  set ..Stub = ##class(Stick.Stub).%New(className, args...)
   return $$$OK
 }
 
-ClassMethod Create(object As %RegisteredObject = "") As Stick.Mock
+ClassMethod Create(className As %RegisteredObject = "", args...) As Stick.Mock
 {
-  return ..%New(object)
+  return ..%New(className, args...)
 }
 
 Method EnsureMethodStubExists(methodName As %String) [ Private ]
@@ -23,15 +25,35 @@ Method EnsureMethodStubExists(methodName As %String) [ Private ]
   }
 }
 
+Method GetSpy()
+{
+  return ..Stub.GetSpy()
+}
+
+/*
 /// Is used to implement an unknown method call.  It is also used
 /// to resolve an unknown multidimensional property reference (to get the value
 /// of a property) because that syntax is identical to a method call.
-Method %DispatchMethod(methodName As %String, args...) [ ServerOnly = 1 ]
+Method %DispatchMethod(
+  methodName As %String,
+  args...) [ ServerOnly = 1 ]
 {
   do ..EnsureMethodStubExists(methodName)
   return $method(..Stub, methodName, args...)
 }
+*/
+Method GetExpectedCallsCount() As %Integer
+{
+  set expectedCalls = 0
+  
+  for i=1:1:..MethodExpectationManagers.Count() {
+    set expectedCalls = expectedCalls + ..MethodExpectationManagers.GetAt(i).CallsExpected
+  }
+  
+  return expectedCalls
+}
 
+/*
 /// Is used to get the value of an unknown property.
 Method %DispatchGetProperty(propertyName As %String) [ ServerOnly = 1 ]
 {
@@ -39,15 +61,18 @@ Method %DispatchGetProperty(propertyName As %String) [ ServerOnly = 1 ]
 }
 
 /// is used to set the value of an unknown property.
-Method %DispatchSetProperty(propertyName As %String, value) [ ServerOnly = 1 ]
+Method %DispatchSetProperty(
+  propertyName As %String,
+  value) [ ServerOnly = 1 ]
 {
   set $property(..Stub, propertyName) = value
 }
-
+*/
 Method Expects(methodName As %String) As Stick.Mock.MethodExpectationManager
 {
-  do ..EnsureMethodStubExists(methodName)  
-  return ##class(Stick.Mock.MethodExpectationManager).%New($this, methodName)
+  do ..EnsureMethodStubExists(methodName)
+  set ..LastExpectationGroupIndex = ..LastExpectationGroupIndex + 1
+  return ##class(Stick.Mock.MethodExpectationManager).%New($this, methodName, ..LastExpectationGroupIndex)
 }
 
 Method GetStub() As Stick.Stub
@@ -67,29 +92,18 @@ Method AddMethodExpectationManager(expectationManager As Stick.Mock.MethodExpect
   do ..AddToExpectationManagerGroups(..MethodExpectationManagers, expectationManager)
 }
 
-Method AddToExpectationManagerGroups(groups As %ArrayOfObjects, expectationManager As Stick.Mock.AbstractExpectationManager) [ Private ]
+Method AddToExpectationManagerGroups(groups As %ListOfObjects, expectationManager As Stick.Mock.AbstractExpectationManager) [ Private ]
 {
-  set group = ##class(%ListOfObjects).%New()
-  
-  if groups.IsDefined(expectationManager.GroupKey) {    
-    set group = groups.GetAt(expectationManager.GroupKey)   
-  }
-  
-  do group.Insert(expectationManager)
-  do groups.SetAt(group, expectationManager.GroupKey)
+  do groups.Insert(expectationManager)
 }
 
 Method VerifyExpectationManagerGroups(expectationManagerGroups As %ArrayOfObjects) As %Status [ Private ]
 {
-  set key = ""
   
   try {   
-    while 1 {
-      set managerGroup = expectationManagerGroups.GetNext(.key)
-      quit:(key = "" || (managerGroup=""))
-    
-      set expectationGroupCount = managerGroup.Count()
-      for i=1:1:expectationGroupCount  do managerGroup.GetAt(i).Verify(i, expectationGroupCount)
+    for i=1:1:expectationManagerGroups.Count() {
+      set group = expectationManagerGroups.GetAt(i)
+      do group.Verify()
     }
   } catch ex {
     return ex.AsStatus()
@@ -100,21 +114,29 @@ Method VerifyExpectationManagerGroups(expectationManagerGroups As %ArrayOfObject
 
 Method Verify() As %Status
 {
+     
+  $$$QuitOnError(..VerifyWithoutReset())
+  do ..ResetMock()
+  
+  return $$$OK
+}
+
+Method VerifyWithoutReset() As %Status
+{
   set sc = $$$OK
   
   try {
     $$$ThrowOnError(..VerifyExpectationManagerGroups(..MethodExpectationManagers))
   } catch ex {
     set sc = ex.AsStatus()
-  }   
+  }
   
-  do ..ResetMock()
   return sc
 }
 
 Method ResetMock()
 {
-  do ..GetStub().ResetStub()
+  do ..GetStub().Reset()
   do ..MethodExpectationManagers.Clear()
 }
 
