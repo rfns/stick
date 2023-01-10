@@ -1,22 +1,44 @@
+Include stick
+
 Class Stick.Stub.Method Extends %RegisteredObject
 {
 
+Property METHODNAME As %String;
+
 Property Stub As Stick.Stub [ Private ];
+
+Property Spy As Stick.Spy [ Private ];
 
 Property BehaviorAssignments As list Of Stick.Stub.BehaviorAssignment [ Private ];
 
 Property DefaultBehaviorAssignment As Stick.Stub.BehaviorAssignment [ Private ];
 
-Method %OnNew(stub As Stick.Stub) As %Status
+Property LastArguments [ MultiDimensional, Private ];
+
+Property CallLimit As %Integer [ InitialExpression = 0, ReadOnly ];
+
+Property LastCallLimitIncrease As %Integer [ InitialExpression = 1, ReadOnly ];
+
+Method %OnNew(stub As Stick.Stub, methodName As %String) As %Status
 {
   set ..Stub = stub
+  set ..METHODNAME = $$$SubstituteMethodName(methodName)
   set ..DefaultBehaviorAssignment = ##class(Stick.Stub.BehaviorAssignment).%New()
+  set ..Spy = stub.GetSpy()
   return $$$OK
+}
+
+Method SetCallLimit(newLimit As %Integer)
+{
+  set i%CallLimit = newLimit
 }
 
 Method CallWithArguments(args...) As Stick.Stub.BehaviorAssignment
 {
-        
+       
+  kill i%LastArguments
+  merge i%LastArguments = args
+  
   set assignment = ..GetMatchingBehaviorAssignment(.args, 1)
   if $isobject(assignment) return assignment
 
@@ -28,58 +50,53 @@ Method CallWithArguments(args...) As Stick.Stub.BehaviorAssignment
 
 Method ThenReturn(value As %String)
 {
-  do ..DefaultBehaviorAssignment.ThenReturn(value)
-  return ..DefaultBehaviorAssignment
+  merge args = ..LastArguments
+  return ..GetMatchingBehaviorAssignment(.args).ThenReturn(value)
 }
 
 Method ThenThrow(exception As %Exception.AbstractException)
 {
-  do ..DefaultBehaviorAssignment.ThenThrow(exception)
-  return ..DefaultBehaviorAssignment
+  merge args = ..LastArguments
+  return ..GetMatchingBehaviorAssignment(.args).ThenThrow(exception)
 }
 
 Method ThenPassthrough()
 {
-  do ..DefaultBehaviorAssignment.ThenPassthrough()
-  return ..DefaultBehaviorAssignment
+  return ..GetMatchingBehaviorAssignment(.args).ThenPassthrough()
 }
 
-Method CallWhileSpying(implementationObject As %RegisteredObject = "", methodName As %String, args...)
+Method CallMethod(args...)
 {
-  
+    
   set assignment = ..GetMatchingBehaviorAssignment(.args)
   set exception = ""
   set returnValue = ""
   set mustThrow = 0
   
-  if assignment.IsPassthrough() && $isobject(implementationObject) {    
-    try {
-      set returnValue = $method(implementationObject, methodName, args...)
-      do ##class(Stick.Helper).CopyProperties(implementationObject, ..Stub)
-    } catch ex {
-      if $System.Status.GetErrorText(ex.AsStatus()) '[ "<COMMAND>" {
-        set exception = ex
-      }
-    }   
-  }
+  if $isobject(assignment) {
+    if assignment.IsPassthrough() {    
+      return $method(..Spy, ..METHODNAME, args...)      
+    }
   
-  if 'assignment.IsPassthrough() && assignment.HasReturnValue() {
-    set returnValue = assignment.GetReturnValue()
-  }
-  
-  if 'assignment.IsPassthrough() && assignment.HasException() {
-    set exception = assignment.GetException()
-    set mustThrow = 1
-  }
+    if 'assignment.IsPassthrough() && assignment.HasReturnValue() {
+      set returnValue = assignment.GetReturnValue()
+    }
     
-  do assignment.GetSpy().Record(.args, exception, returnValue)
-  do assignment.IncrementCallCount()  
+    if 'assignment.IsPassthrough() && assignment.HasException() {
+      set exception = assignment.GetException()
+      set mustThrow = 1
+    }
+  }
+  
+  do ..Spy.GetMethodSpy($$$RealMethodName(..METHODNAME)).Record(.args, exception, returnValue)
+      
+  do assignment.IncrementCallCount()
   
   if mustThrow = 1 throw exception
   return returnValue
 }
 
-Method GetMatchingBehaviorAssignment(ByRef args, exclusive As %Boolean = 0) As Stick.Stub.BehaviorAssignment [ Private ]
+Method GetMatchingBehaviorAssignment(ByRef args, exclusive As %Boolean = 0) As Stick.Stub.BehaviorAssignment
 {
   for i=1:1:..BehaviorAssignments.Count() {
     set assignment = ..BehaviorAssignments.GetAt(i)
@@ -91,13 +108,13 @@ Method GetMatchingBehaviorAssignment(ByRef args, exclusive As %Boolean = 0) As S
     }
   }
   
-  if 'exclusive  return ..DefaultBehaviorAssignment
+  if 'exclusive return ..DefaultBehaviorAssignment
   return ""
 }
 
-Method GetMethodSpy(args...) As Stick.Spy.Method
+Method GetMethodSpy() As Stick.Spy.Method
 {
-  set assignment = ..GetMatchingBehaviorAssignment(.args)
+  set assignment = ..GetMatchingBehaviorAssignment()
   if $isobject(assignment) return assignment.GetSpy()
   
   return ##class(Stick.Spy.Method).%New()
@@ -105,8 +122,11 @@ Method GetMethodSpy(args...) As Stick.Spy.Method
 
 Method Reset()
 {
+  set ..LastArguments = ""
   set ..DefaultBehaviorAssignment = ##class(Stick.Stub.BehaviorAssignment).%New()
+  
   do ..BehaviorAssignments.Clear()
+  do ..Spy.Reset()
 }
 
 }
