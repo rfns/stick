@@ -1,4 +1,4 @@
-Class Stick.Spy.Method Extends (%RegisteredObject, Stick.Spy.ICommon)
+Class Stick.Spy.Method Extends (%RegisteredObject, Stick.Spy.Interface)
 {
 
 Property CallCount As %Integer [ InitialExpression = 0 ];
@@ -11,24 +11,52 @@ Property LastException As %Exception.AbstractException;
 
 Property LastReturnedValue;
 
-Method IncrementCallCount()
-{
-	set ..CallCount = ..CallCount + 1
-}
+Property CalledWithArgumentNTimes As %Integer [ MultiDimensional ];
 
 Method Record(ByRef args = "", exception As %Exception.AbstractException = "", returnValue = "")
 {
-	merge i%LastUsedArguments = args
-	set ..LastException = exception
-	set ..LastReturnedValue = returnValue
-	set i%Calls(..CallCount + 1) = ##class(Stick.Spy.CallRecord).%New(.args, exception, returnValue)
+  merge i%LastUsedArguments = args
+  set ..LastException = exception
+  set ..LastReturnedValue = returnValue
+  set ..CallCount = ..CallCount + 1
+  set i%Calls(..CallCount) = ##class(Stick.Spy.CallRecord).%New(.args, exception, returnValue)
 }
 
-Method Reset()
+Method GetTimesCalledWithArguments(ByRef args = "") As %Integer
 {
-	set ..LastException = ""
-	set ..LastReturnedValue = ""
-	kill i%Class
+   set count = 0
+   set key = ""
+   for i=1:$order(i%Calls(key)) {
+     set key = $order(i%Calls(key), 1, callRecord)
+     quit:key=""
+     
+     kill recordArgs
+     merge recordArgs = callRecord.Arguments
+     
+     if ##class(Stick.Helper).ArgumentCompare(.args, .recordArgs) {
+       set count = count + 1
+     }
+   }
+   
+   return count
+}
+
+Method GetTimesReturnedWithValue(value) As %Integer
+{
+   set count = 0
+   set key = ""
+   for i=1:$order(i%Calls(key)) {
+     set key = $order(i%Calls(key), 1, callRecord)
+     quit:key=""
+     
+     set returnValue = callRecord.ReturnedValue
+     
+     if returnValue = value {
+       set count = count + 1
+     }
+   }
+   
+   return count
 }
 
 }

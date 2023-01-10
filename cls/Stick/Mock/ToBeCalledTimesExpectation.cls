@@ -1,10 +1,25 @@
 Class Stick.Mock.ToBeCalledTimesExpectation Extends (%RegisteredObject, Stick.Mock.AbstractExpectation)
 {
 
-Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String) As %Status
+Method SetSharedExpectation(groupManager As Stick.Mock.AbstractExpectationManager)
 {
-  if spy.CallCount '= ..Value {
-    return $$$ERROR($$$GeneralError, $$$FormatText("Method '%1' should have been called exactly %2 time(s) (got called %3)", methodName, ..Value, spy.CallCount))
+  set groupManager.CallsExpected = ..Value
+}
+
+Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String) As %Status
+{
+  set methodSpy = spy.GetMethodSpy(methodName)
+  merge argsExpected = ..GetExpectationManager().ArgsExpected
+  set times = methodSpy.CallCount
+  
+  if $data(argsExpected) > 0 {
+    set times = methodSpy.GetTimesCalledWithArguments(.argsExpected)
+  }
+  
+  set expectedArgs = ##class(Stick.Helper).SerializeArguments(.argsExpected)
+  
+  if times '= ..Value {
+    return $$$ERROR($$$GeneralError, $$$FormatText("Method '%1' should have been called exactly %2 time(s) with arguments '%3' (got called %4 time(s))", methodName, ..Value, expectedArgs, times))
   }
   
   return $$$OK

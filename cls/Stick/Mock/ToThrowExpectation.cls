@@ -3,14 +3,16 @@ Class Stick.Mock.ToThrowExpectation Extends (%RegisteredObject, Stick.Mock.Abstr
 
 Method AddBehavior(methodStub As Stick.Stub.Method)
 {
-  do methodStub.ThenThrow(..Value)
+  for i=1:1:methodStub.LastCallLimitIncrease  do methodStub.ThenThrow(..Value)
 }
 
-Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy.Method, methodName As %String)
+Method OnEvaluate(callIndex As %Integer, spy As Stick.Spy, methodName As %String)
 {
   
+  set methodSpy = spy.GetMethodSpy(methodName)
+  
   set expectedStatus = ..Value.AsStatus()
-  set receivedStatus = $select($isobject(spy.Calls(callIndex).ExceptionThrown) : spy.Calls(callIndex).ExceptionThrown.AsStatus(), 1: "")
+  set receivedStatus = $select($isobject(methodSpy.Calls(callIndex).ExceptionThrown) : methodSpy.Calls(callIndex).ExceptionThrown.AsStatus(), 1: "")
   set expectedMessage = $System.Status.GetErrorText(expectedStatus)
   set receivedMessage = $select($$$ISERR(receivedStatus): $System.Status.GetErrorText(receivedStatus), 1: "")
   
