@@ -75,7 +75,10 @@ Method GetMethodImplementationObject(methodName As %String) As Stick.Internal.Me
 
 Method %OnClose() As %Status
 {
-  if $isobject(..BindingRoutine) return ..BindingRoutine.Delete(..BindingRoutine.Name_".INT")
+  if $isobject(..BindingRoutine) {
+    return ..BindingRoutine.Delete(..BindingRoutine.Name_".mac")
+  }
+  
   return $$$OK
 }
 

@@ -5,9 +5,12 @@ Class Stick.Internal.BindingRoutinePatcher Extends %RegisteredObject
 
 Property Generator As Stick.Internal.BindingRoutineGenerator [ Private ];
 
+Property IncludeCache As Stick.Internal.SubscriptedCache [ Private ];
+
 Method %OnNew(generator As Stick.Internal.BindingRoutineGenerator) As %Status
 {
   set ..Generator = generator
+  set ..IncludeCache = ##class(Stick.Internal.SubscriptedCache).%New()
   return $$$OK
 }
 
@@ -32,7 +35,7 @@ Method PatchImplementation(routine As %Routine, methodName As %String, signature
   set implementationObject = ..Generator.GetMethodImplementationObject(methodName)
   set implementation = implementationObject.GetContent()
   
-  set regex = ##class(%Regex.Matcher).%New("(?:k|K|Kill|kill|KILL)?(\s?+(?:i%|\.\.)([\w\d]+))(,?)")
+  set killMatcher = ##class(%Regex.Matcher).%New("(?:k|K|Kill|kill|KILL)?(\s?+(?:i%|\.\.)([\w\d]+))(,?)")
   
   if routine.Size > 0 {
     do routine.MoveToEnd()
@@ -46,17 +49,18 @@ Method PatchImplementation(routine As %Routine, methodName As %String, signature
   
   while 'implementation.AtEnd {
     set line = implementation.ReadLine()
-    set line = $replace(line, "..", "thisObject.")
-    set line = $replace(line, "$this", "thisObject")
-    set line = $replace(line, "%this", "thisObject")    
     
-    set regex.Text = $zstrip(line, "<>W")
+    set killMatcher.Text = $zstrip(line, "<>W")
     
-    if ($$$lcase(regex.Text) [ "kill ") || ($$$lcase(regex.Text) [ "k ") {
-      set line = "  do "_regex.ReplaceAll("thisObject.""_KillMultiDimensional""(""$2"")$3")
+    if ($$$lcase(killMatcher.Text) [ "kill ") || ($$$lcase(killMatcher.Text) [ "k ") {
+      set line = "  do "_regex.ReplaceAll("injectedSpy.""_KillMultiDimensional""(""$2"")$3")
     }
-        
-    set line = $replace(line, "i%", "thisObject.")
+    
+    set line = $replace(line, "..", "injectedSpy.")
+    set line = $replace(line, "$this", "injectedSpy")
+    set line = $replace(line, "%this", "injectedSpy")    
+    
+    set line = $replace(line, "i%", "injectedSpy.")
         
     do routine.WriteLine(line)
   }
@@ -70,7 +74,7 @@ Method PatchArguments(methodName As %String) As %String [ Private ]
 {
   set args = ""       
   set methodImplementationObject = ..Generator.GetMethodImplementationObject(methodName)
-  set thisObjectSignature = ",thisObject)"
+  set thisObjectSignature = ",injectedSpy)"
   
   set arguments = methodImplementationObject.GetArgumentList()
   
@@ -80,7 +84,7 @@ Method PatchArguments(methodName As %String) As %String [ Private ]
     set $list(args, *+1) = $listget(parsedArgSpec, 1)
   }
   
-  if args = "" set thisObjectSignature = "thisObject)"
+  if args = "" set thisObjectSignature = "injectedSpy)"
   set args = "("_$lts(args)_thisObjectSignature
   
   return args
@@ -94,9 +98,12 @@ Method PatchIncludes() As %String
   set includeName = ""   
   
   while 1 {
-    set includeName = targetClass.IncludeCodeAll.Next(.includeName)
+    set includeName = targetClass.IncludeCodeAll.Next(.includeName)    
     quit:includeName=""
+    continue:..IncludeCache.Hit(includeName)
+        
     set $list(includeList, *+1) = "#include "_includeName
+    do ..IncludeCache.Put("", includeName)
   }
   
   set includeName = ""
@@ -104,10 +111,13 @@ Method PatchIncludes() As %String
   while 1 {
     set includeName = targetClass.IncludeMGenAll.Next(.includeName)
     quit:includeName=""
+    continue:..IncludeCache.Hit(includeName)
     
     if '$listfind(includeList, includeName) {
       set $list(includeList, *+1) = "#include "_includeName
     }
+    
+    do ..IncludeCache.Put("", includeName)
   }  
   
   if $listlength(includeList) = 0 return ""
