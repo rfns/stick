@@ -21,11 +21,6 @@ Method %OnNew(routine As %Routine, label As %String, signature As %String, defau
   return $$$OK
 }
 
-Method %OnClose() As %Status
-{
-  return ..Routine.Delete(..Routine.Name)
-}
-
 Method Run(bindingArgument, args...)
 {
   set ret = ""  
@@ -49,11 +44,17 @@ Method Run(bindingArgument, args...)
 Method MergeArguments(bindingArgument, ByRef args = 0, Output mergedArgs = 0) [ Private ]
 {
   for i=1:1:$ll(..DefaultArgValues) {
-    set mergedArgs(i) = $select($data(args(i)) : args(i), 1: $listget(..DefaultArgValues, i))    
+    set mergedArgs(i) = $select($data(args(i)) : args(i), 1: $$EvalExpression($listget(..DefaultArgValues, i)))
   }
   
   set mergedArgs = $ll(..DefaultArgValues) + 1
   set mergedArgs(mergedArgs) = bindingArgument
+  
+EvalExpression(exp)
+  set exp = $replace(exp, "..", "bindingArgument.")
+  xecute ("(result, bindingArgument) set result = "_exp, .result, bindingArgument)
+  
+  return result
 }
 
 Method CreateXecuteCallPoint() As %String

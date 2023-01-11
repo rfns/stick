@@ -11,10 +11,11 @@ Property Spy As Stick.Spy [ Private ];
 
 Method %OnNew(className As %String = "", args...) As %Status [ Private ]
 {
-  set object = ""
+  set object = "" 
+  set replayConstructor = $data(args)
   
-  if className '= "" set object = $classmethod(className, "%New", args...)
-  set ..Spy = ##class(Stick.Spy).%New(object).UseThisStub($this)
+  if className '= "" set object = $classmethod(className, "%New", args...) 
+  set ..Spy = ##class(Stick.Spy).%New(object, replayConstructor).UseThisStub($this)
   
   return $$$OK
 }
@@ -38,27 +39,6 @@ Method When(methodName As %String) As Stick.Stub.Method
   return methodStub
 }
 
-/*Method %DispatchMethod(
-  methodName As %String,
-  args...)
-{
-  return ..GetMethodStub(methodName).ProxyMethodCallToSpy(args...)
-}
-
-/// is used to set the value of an unknown property.
-Method %DispatchSetProperty(
-  propertyName As %String,
-  value) [ ServerOnly = 1 ]
-{
-  
-  set $property(..Spy, propertyName) = value
-}
-
-/// Is used to get the value of an unknown property.
-Method %DispatchGetProperty(propertyName As %String) [ ServerOnly = 1 ]
-{
-  return $property(..Spy, propertyName)
-}*/
 Method GetMethodStub(methodName As %String) As Stick.Stub.Method
 {
  

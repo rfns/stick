@@ -19,7 +19,7 @@ Property ReflectionMode As %Boolean [ InitialExpression = 0 ];
 
 Property RealObject As %RegisteredObject [ Private ];
 
-Method %OnNew(object As %String = "") As %Status
+Method %OnNew(object As %String = "", replayConstructor As %Boolean = 0) As %Status
 {
   if $isobject(object) {
     if object.%IsA($classname()) {
@@ -28,7 +28,8 @@ Method %OnNew(object As %String = "") As %Status
     
     set ..RealObject = object
     set .."__Generator__" = ##class(Stick.Internal.BindingRoutineGenerator).%New($classname(..RealObject))
-    do .."_FillUsingRealObject"()
+    
+    do .."_FillUsingRealObject"(replayConstructor)    
   }
     
   
@@ -41,10 +42,14 @@ Method UseThisStub(stub As Stick.Stub)
   return $this
 }
 
-Method "_FillUsingRealObject"() [ Internal, Private ]
+Method "_FillUsingRealObject"(replayConstructor As %Boolean = 0) [ Internal, Private ]
 {
-  set ..ReflectionMode = 1
+  set ..ReflectionMode = 1  
+  
   do ##class(Stick.Helper).CopyProperties(..RealObject, $this)
+  
+  if replayConstructor = 1 do .."_DelegateMethodCall"("_%OnNew")
+  
   set ..ReflectionMode = 0
 }
 
